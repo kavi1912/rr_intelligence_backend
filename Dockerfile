@@ -22,4 +22,4 @@ RUN npm run db:generate
 
 EXPOSE 8080/tcp
 
-CMD [ "node", "/api/app.js" ]
+CMD [ "node", "/api/index.js" ]
