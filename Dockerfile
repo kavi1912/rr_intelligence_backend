@@ -18,7 +18,7 @@ COPY --from=build-stage /home/node/api/.env.prod /api/.env
 COPY --from=build-stage /home/node/api/prisma /api
 
 RUN npm install --only=production
-RUN npm run generate 
+RUN npm run db:generate 
 
 EXPOSE 8090/tcp
 
