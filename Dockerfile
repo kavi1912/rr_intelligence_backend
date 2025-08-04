@@ -1,4 +1,4 @@
-FROM node:18.14-alpine as build-stage
+FROM node:18.20-alpine as build-stage
 
 USER node
 RUN mkdir -p /home/node/api
@@ -7,7 +7,7 @@ COPY --chown=node . .
 
 RUN npm install &&  npm run build
 
-FROM node:18.14-alpine as production-stage
+FROM node:18.20-alpine as production-stage
 
 RUN mkdir -p /api
 WORKDIR /api
