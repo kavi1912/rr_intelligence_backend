@@ -20,6 +20,6 @@ COPY --from=build-stage /home/node/api/prisma /api
 RUN npm install --only=production
 RUN npm run db:generate 
 
-EXPOSE 8090/tcp
+EXPOSE 8080/tcp
 
 CMD [ "node", "/api/app.js" ]
