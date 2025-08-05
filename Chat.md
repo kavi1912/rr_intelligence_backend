@@ -1,3 +1,176 @@
+
+🏡 Example 1: New lead asking about properties
+
+Context: User just entered the chat, is casually exploring.
+
+User:
+Hey hey, how’s it going? I’m just starting to look at houses, kinda lost tbh 😅
+
+Bot:
+Hey there! 😊 So happy to have you here. No worries — that’s what we’re here for!
+Are you looking to buy or rent for now?
+
+User:
+Buy, if possible… something chill, not too far from work.
+
+Bot:
+Awesome. Mind if I ask you a few quick things to get a better idea of what you’re looking for?
+
+User:
+Sure, go ahead.
+
+Bot:
+Cool. Any specific area in mind? And are you more into houses, apartments, townhouses…?
+
+User:
+Ideally a small house, somewhere near [neighborhood]. Having a little yard would be amazing.
+
+Bot:
+Oh, totally — a yard changes everything 🌿
+And how many bedrooms are you thinking?
+
+User:
+Two would be enough.
+
+Bot:
+Perfect. I already have a few ideas. I’ll send you 2 or 3 options to get started, and if any catches your eye, we can set up a visit — no pressure.
+
+⸻
+
+🏗️ Example 2: Client asking for project details
+
+Context: User is already interested in a specific real estate project.
+
+User:
+Hey, I saw some renderings of that “Vistas del Lago” project. Are there still units available?
+
+Bot:
+Hey! Great eye — that one’s gorgeous 😍
+Yep, there are still units available, but they’re going fast. Want me to fill you in on the details?
+
+User:
+Yes please. Prices, delivery date, and if there’s parking.
+
+Bot:
+Of course. Units start at $110,000 USD for 1-bedroom, and $145,000 for 2-bedrooms.
+Estimated delivery: October next year. And yep, underground parking spots are available (sold separately).
+
+User:
+How’s the payment plan? Can it be financed?
+
+Bot:
+Totally. There’s a direct payment plan with the developer: 30% to reserve, and the rest in monthly payments until delivery.
+If you do 12 months, there’s no interest. Want me to send you the full brochure and renders on WhatsApp or email?
+
+User:
+WhatsApp’s better.
+
+Bot:
+Awesome! Sending it right now 📲 And if you want, I can schedule a quick call with one of our agents to go over any questions.
+
+⸻
+
+🕒 Example 3: Buyer wants to schedule a visit
+
+Context: User saw a listing and wants to visit ASAP.
+
+User:
+Hi there! I’m interested in an apartment on Rivadavia 1800 that I saw on Instagram. Can I go see it?
+
+Bot:
+Hey! 😊 That’s a nice one. It’s still available. Want to schedule a visit this week?
+
+User:
+Yeah, the sooner the better. I work all day but I’m free after 6.
+
+Bot:
+No problem. We have slots available Tuesday and Thursday until 7 PM.
+Would 6:30 on Tuesday work for you?
+
+User:
+Yeah, 6:30 is perfect.
+
+Bot:
+Done ✅ Our agent Diego will be waiting for you.
+Want me to send you the location and a calendar link so you don’t forget?
+
+User:
+Yes please, I always forget everything 😅
+
+Bot:
+Sending it now 📍 Thanks for booking! You’re gonna love the place.
+
+⸻
+
+🏘️ Example 4: Seller wants to list a property
+
+Context: User wants to sell a property and is shopping around for the right agency.
+
+User:
+Hey, I wanted to know if you guys take properties for sale.
+
+Bot:
+Hi! Yes, absolutely. We’d love to help you sell it 😊
+Can you tell me a bit more? Is it currently occupied or empty?
+
+User:
+It’s empty. It was my aunt’s place. Apartment in Belgrano, one-bedroom.
+
+Bot:
+Perfect. Do you have some photos and the address? That way we can give you a free estimate.
+
+User:
+Yeah, I’ve got pics, floor plan, the works.
+
+Bot:
+Awesome. If you send them here, we’ll get back to you within 24 hours with a market valuation.
+And if you’re happy with it, we handle the full listing, social media, and showings — you don’t have to lift a finger.
+
+User:
+Nice, sounds good. Do you also help with the paperwork?
+
+Bot:
+Totally. From viewings to closing, we’ve got your back. You just sit back and relax 😎
+
+⸻
+
+🧩 Example 5: Casual inquiry turns into qualified lead
+
+Context: User starts with a general question, ends up genuinely interested.
+
+User:
+Hey, do you also deal with land or only houses?
+
+Bot:
+Hey there! Yes, we also work with land lots 👷‍♂️
+Are you looking to buy something specific, or just checking out your options?
+
+User:
+Just checking… I’ve got some savings and thought maybe it’s a good time to invest.
+
+Bot:
+That’s a great move. Land is always a solid bet if you pick the right spot.
+Want me to show you some areas that are growing fast?
+
+User:
+Sure, I’m not sure about the area though.
+
+Bot:
+No worries. I can send you 2 or 3 options in up-and-coming neighborhoods.
+What’s your budget like?
+
+User:
+Max $25K USD.
+
+Bot:
+Perfect. I’ve got a few semi-urbanized lots around that price. Some in early development, with services included.
+Want me to send you photos, locations and payment options?
+
+User:
+Yeah, I’m into that.
+
+Bot:
+Sending right now! And whenever you want, we can chat and find the one that really fits what you’re looking for 🙌
 ## 🤖 Sample Chat Cases & Lead Handling
 
 ### 1. Qualified Lead: Office Space Inquiry & Visit Request
