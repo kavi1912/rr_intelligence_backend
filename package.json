@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "CRM Backend for Real Estate with Telegram Integration",
   "main": "dist/index.js",
+  "license": "SEE LICENSE IN ../LICENSE",
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "build": "tsc",

@@ -109,3 +109,5 @@ model FollowUp {
   
   @@map("follow_ups")
 }
+
+

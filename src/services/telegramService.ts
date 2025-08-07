@@ -1,9 +1,8 @@
 import TelegramBot from 'node-telegram-bot-api';
-import { GoogleGenerativeAI } from '@google/generative-ai';
 import { PrismaClient } from '@prisma/client';
+import { aiConversationService } from './aiConversationService';
 
 const prisma = new PrismaClient();
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
 interface TelegramBotService {
   bot: TelegramBot;
@@ -14,7 +13,6 @@ interface TelegramBotService {
 
 class TelegramBotServiceImpl implements TelegramBotService {
   public bot: TelegramBot;
-  private model: any;
 
   constructor() {
     const token = process.env.TELEGRAM_BOT_TOKEN;
@@ -23,14 +21,6 @@ class TelegramBotServiceImpl implements TelegramBotService {
     }
 
     this.bot = new TelegramBot(token, { polling: true });
-    // Use latest Gemini model with better capabilities
-    this.model = genAI.getGenerativeModel({ 
-      model: 'gemini-1.5-flash',
-      generationConfig: {
-        temperature: 0.7,
-        maxOutputTokens: 1000,
-      }
-    });
     this.setupHandlers();
   }
 
@@ -43,28 +33,12 @@ class TelegramBotServiceImpl implements TelegramBotService {
       const lastName = msg.from?.last_name || '';
       const username = msg.from?.username || '';
       
-      const welcomeMessage = `🏠 Welcome to RRintelligence CRM, ${firstName}!
-      
-I'm your AI real estate assistant. I can help you with:
-• 🏘️ Browse properties by location (/properties)
-• 💰 Property valuations and market insights
-• 📈 Investment opportunities and ROI analysis
-• 📅 Scheduling property visits
-• 👥 Connecting with our expert agents
-
-Commands:
-/properties - Browse properties by state/city
-/help - Get help
-
-How can I assist you today?`;
-
-      await this.sendMessage(chatId, welcomeMessage);
-      
       // Capture user details and create/update lead
       await this.captureUserDetails(telegramUserId, firstName, lastName, username);
       
-      // Log the interaction
-      await this.logChatHistory(telegramUserId, '/start', welcomeMessage);
+      // Use AI conversation service to handle start message
+      const response = await aiConversationService.processMessage(telegramUserId, '/start');
+      await this.sendMessage(chatId, response);
     });
 
     // Handle /properties command
@@ -129,22 +103,23 @@ Need help? Just ask me anything!`;
       const userMessage = msg.text || '';
       
       try {
-        // Check if this is a property-related query
-        if (await this.isPropertyQuery(userMessage)) {
-          await this.handlePropertyQuery(chatId, telegramUserId, userMessage);
-        } else {
-          // Generate AI response using Gemini
-          const aiResponse = await this.generateAIResponse(userMessage, telegramUserId);
-          
-          // Send response to user
-          await this.sendMessage(chatId, aiResponse);
-          
-          // Log the conversation
-          await this.logChatHistory(telegramUserId, userMessage, aiResponse);
-          
-          // Update or create lead based on conversation
-          await this.updateLead(telegramUserId, userMessage, aiResponse);
+        // Use AI conversation service for all messages
+        const response = await aiConversationService.processMessage(telegramUserId, userMessage);
+        
+        // Check if response indicates images should be sent
+        if (response.includes('[Images will be sent separately]')) {
+          // Extract property number if specified, otherwise send first property
+          const propertyMatch = userMessage.match(/property\s*(\d+)/i);
+          if (propertyMatch) {
+            const propertyNumber = parseInt(propertyMatch[1]);
+            await this.sendPropertyImages(chatId, telegramUserId, propertyNumber);
+          } else {
+            // No specific property number, send images of first available property
+            await this.sendPropertyImages(chatId, telegramUserId, 1);
+          }
         }
+        
+        await this.sendMessage(chatId, response);
         
       } catch (error) {
         console.error('Error handling message:', error);
@@ -698,6 +673,39 @@ Reply with your contact number for quick follow-up!`;
 
   public startBot(): void {
     console.log('🤖 Telegram bot started successfully');
+  }
+
+  // Send property images by property number
+  private async sendPropertyImages(chatId: number, telegramUserId: string, propertyNumber: number): Promise<void> {
+    try {
+      // Get all active properties (in the order they would be shown)
+      const properties = await prisma.property.findMany({
+        where: { isActive: true },
+        orderBy: { createdAt: 'desc' },
+        take: 10
+      });
+
+      if (properties.length === 0) {
+        await this.sendMessage(chatId, 'No properties available to show images for.');
+        return;
+      }
+
+      if (propertyNumber > properties.length || propertyNumber < 1) {
+        await this.sendMessage(chatId, `Property ${propertyNumber} not found. Please choose a number between 1 and ${properties.length}.`);
+        return;
+      }
+
+      const property = properties[propertyNumber - 1];
+      
+      // Log what we're about to send
+      console.log(`Sending images for property ${property.id}, Location: ${property.location}`);
+      
+      await this.showPropertyImages(chatId, telegramUserId, property.id);
+
+    } catch (error) {
+      console.error('Error sending property images:', error);
+      await this.sendMessage(chatId, 'Error retrieving property images.');
+    }
   }
 
   public stopBot(): void {

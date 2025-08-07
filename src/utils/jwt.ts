@@ -5,8 +5,8 @@ const JWT_SECRET = process.env.JWT_SECRET;
 if (!JWT_SECRET) {
   throw new Error('JWT_SECRET environment variable is required');
 }
-// Tokens should never expire as requested
-const JWT_EXPIRES_IN = '100y';
+// JWT tokens expire after 12 hours
+const JWT_EXPIRES_IN = '12h';
 
 export interface JWTPayload {
   id: string;
