@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, LeadStatus } from '@prisma/client';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
 const prisma = new PrismaClient();
@@ -369,7 +369,7 @@ Our team will contact you within 24 hours with personalized property options tha
             phoneNumber: extractedInfo.phoneNumber,
             budget: extractedInfo.budget,
             expectations: extractedInfo.expectations,
-            status: finalStatus || 'NOT_QUALIFIED'
+            status: (finalStatus as LeadStatus) || LeadStatus.NOT_QUALIFIED
           }
         });
       }
@@ -414,7 +414,7 @@ Our team will contact you within 24 hours with personalized property options tha
    * Get the higher priority status
    */
   private getHigherStatus(status1: string, status2: string): string {
-    const statusPriority = { 'HIGH': 3, 'MEDIUM': 2, 'NOT_QUALIFIED': 1 };
+    const statusPriority: Record<string, number> = { 'HIGH': 3, 'MEDIUM': 2, 'NOT_QUALIFIED': 1 };
     const priority1 = statusPriority[status1] || 1;
     const priority2 = statusPriority[status2] || 1;
     
@@ -568,7 +568,7 @@ Would you like specific information for any particular city or property type?`;
     const foundLocations = locationKeywords.filter(kw => lowerMessage.includes(kw));
     
     if (foundPropertyTypes.length > 0 || foundLocations.length > 0 || budget || lowerMessage.includes('any budget')) {
-      expectations = `Looking for: ${foundPropertyTypes.join(', ')} ${foundLocations.length > 0 ? 'in ' + foundLocations.join(', ') : ''} ${budget ? 'budget: ' + budgetMatch[0] : lowerMessage.includes('any budget') ? 'budget: flexible' : ''}`.trim();
+      expectations = `Looking for: ${foundPropertyTypes.join(', ')} ${foundLocations.length > 0 ? 'in ' + foundLocations.join(', ') : ''} ${budget ? 'budget: ' + (budgetMatch?.[0] || budget) : lowerMessage.includes('any budget') ? 'budget: flexible' : ''}`.trim();
     }
 
     return {

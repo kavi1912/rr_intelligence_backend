@@ -1,5 +1,6 @@
 import TelegramBot from 'node-telegram-bot-api';
 import { PrismaClient } from '@prisma/client';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 import { aiConversationService } from './aiConversationService';
 
 const prisma = new PrismaClient();
@@ -13,6 +14,7 @@ interface TelegramBotService {
 
 class TelegramBotServiceImpl implements TelegramBotService {
   public bot: TelegramBot;
+  private model: any;
 
   constructor() {
     const token = process.env.TELEGRAM_BOT_TOKEN;
@@ -21,6 +23,11 @@ class TelegramBotServiceImpl implements TelegramBotService {
     }
 
     this.bot = new TelegramBot(token, { polling: true });
+    
+    // Initialize Gemini AI
+    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
+    this.model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    
     this.setupHandlers();
   }
 
