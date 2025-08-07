@@ -4,23 +4,24 @@ import { prisma } from '../db/prisma';
 import { aiConversationService } from './aiConversationService';
 
 interface TelegramBotService {
-  bot: TelegramBot;
+  bot: TelegramBot | null;
   startBot(): void;
   stopBot(): void;
   sendMessage(chatId: number, text: string): Promise<void>;
 }
 
 class TelegramBotServiceImpl implements TelegramBotService {
-  public bot: TelegramBot;
+  public bot: TelegramBot | null = null;
   private model: any;
 
   constructor() {
     const token = process.env.TELEGRAM_BOT_TOKEN;
     if (!token) {
-      throw new Error('TELEGRAM_BOT_TOKEN is required');
+      console.warn('TELEGRAM_BOT_TOKEN not found, Telegram bot will be disabled');
+      return;
     }
 
-    this.bot = new TelegramBot(token, { polling: true });
+    this.bot = new TelegramBot(token, { polling: false });
     
     // Initialize Gemini AI
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
@@ -669,6 +670,11 @@ Reply with your contact number for quick follow-up!`;
   }
 
   public async sendMessage(chatId: number, text: string): Promise<void> {
+    if (!this.bot) {
+      console.warn('Cannot send message: Telegram bot not initialized');
+      return;
+    }
+    
     try {
       await this.bot.sendMessage(chatId, text);
     } catch (error) {
@@ -677,7 +683,17 @@ Reply with your contact number for quick follow-up!`;
   }
 
   public startBot(): void {
-    console.log('🤖 Telegram bot started successfully');
+    if (!this.bot) {
+      console.log('🤖 Telegram bot disabled (no token provided)');
+      return;
+    }
+    
+    try {
+      this.bot.startPolling();
+      console.log('🤖 Telegram bot started successfully');
+    } catch (error) {
+      console.error('Failed to start Telegram bot:', error);
+    }
   }
 
   // Send property images by property number

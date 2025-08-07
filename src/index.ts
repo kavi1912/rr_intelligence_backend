@@ -19,7 +19,7 @@ import { telegramService } from './services/telegramService';
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = parseInt(process.env.PORT || '3000', 10);
 
 // Trust proxy for Cloud Run and other reverse proxies
 app.set('trust proxy', 1);
@@ -92,19 +92,27 @@ app.use('*', (req, res) => {
 
 async function startServer() {
   try {
-    // Initialize Telegram Bot
-    telegramService.startBot();
-    
-    // Simplified startup - removed complex connection management
-    
-    app.listen(PORT, () => {
+    // Start HTTP server first
+    app.listen(PORT, '0.0.0.0', () => {
       console.log(`🚀 Server running on port ${PORT}`);
       console.log(`📊 Health check: http://localhost:${PORT}/health`);
       console.log(`🔒 API Base URL: http://localhost:${PORT}/api`);
-      console.log(`🤖 Telegram Bot: Active and listening`);
-      console.log(`🗄️ Database: Railway PostgreSQL`);
       console.log(`🔧 Environment: ${process.env.NODE_ENV || 'development'}`);
+      console.log(`🗄️ Database: Railway PostgreSQL`);
       console.log(`💾 Database: Connection pooling enabled`);
+      
+      // Initialize Telegram Bot after server is listening
+      try {
+        if (process.env.TELEGRAM_BOT_TOKEN) {
+          telegramService.startBot();
+          console.log(`🤖 Telegram Bot: Active and listening`);
+        } else {
+          console.log(`🤖 Telegram Bot: Disabled (no token provided)`);
+        }
+      } catch (botError) {
+        console.warn('Telegram bot failed to start:', botError);
+        console.log(`🤖 Telegram Bot: Disabled due to error`);
+      }
     });
   } catch (error) {
     console.error('Failed to start server:', error);
