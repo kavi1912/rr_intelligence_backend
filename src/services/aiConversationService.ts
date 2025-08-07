@@ -54,17 +54,17 @@ export class AIConversationService {
   }
   
   private async getConversationContext(telegramUserId: string): Promise<ConversationContext> {
-    // Get recent chat history to understand context
-    const recentHistory = await prisma.chatHistory.findMany({
-      where: { telegramUserId },
-      orderBy: { timestamp: 'desc' },
-      take: 10
-    });
-
-    // Get existing lead to extract collected data
-    const existingLead = await prisma.lead.findFirst({
-      where: { telegramUserId }
-    });
+    // Use Promise.all to run both queries concurrently instead of sequentially
+    const [recentHistory, existingLead] = await Promise.all([
+      prisma.chatHistory.findMany({
+        where: { telegramUserId },
+        orderBy: { timestamp: 'desc' },
+        take: 10
+      }),
+      prisma.lead.findFirst({
+        where: { telegramUserId }
+      })
+    ]);
 
     // Build context from existing data
     const context: ConversationContext = {
