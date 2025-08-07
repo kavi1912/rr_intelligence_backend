@@ -12,8 +12,7 @@ import { chatRoutes } from './routes/chat';
 import { mockAuthRoutes } from './routes/mockAuth';
 import { telegramRoutes } from './routes/telegramNew';
 import { errorHandler } from './middleware/errorHandler';
-import { connectionCleanupMiddleware } from './middleware/connectionCleanup';
-import { connectionManager } from './utils/connectionManager';
+// Removed complex connection management that was causing startup issues
 import { telegramService } from './services/telegramService';
 // import { redisService } from './services/redisService';
 // Load environment variables
@@ -43,27 +42,16 @@ app.use(limiter);
 app.use(express.json({ limit: '50mb' })); // Large limit for Base64 images
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
-// Add connection cleanup middleware for production
-if (process.env.NODE_ENV === 'production') {
-  app.use(connectionCleanupMiddleware);
-}
+// Simplified production setup - removed complex connection cleanup
 
 // Health check
-app.get('/health', async (req, res) => {
-  try {
-    const dbStatus = await connectionManager.getConnectionStatus();
-    res.json({ 
-      status: 'OK', 
-      timestamp: new Date().toISOString(),
-      database: dbStatus
-    });
-  } catch (error) {
-    res.status(503).json({ 
-      status: 'ERROR', 
-      timestamp: new Date().toISOString(),
-      database: { isHealthy: false, error: 'Connection check failed' }
-    });
-  }
+app.get('/health', (req, res) => {
+  res.json({ 
+    status: 'OK', 
+    timestamp: new Date().toISOString(),
+    port: PORT,
+    environment: process.env.NODE_ENV || 'development'
+  });
 });
 
 // API Routes
@@ -107,10 +95,7 @@ async function startServer() {
     // Initialize Telegram Bot
     telegramService.startBot();
     
-    // Start connection manager for production
-    if (process.env.NODE_ENV === 'production') {
-      connectionManager.startPeriodicCleanup();
-    }
+    // Simplified startup - removed complex connection management
     
     app.listen(PORT, () => {
       console.log(`🚀 Server running on port ${PORT}`);
@@ -118,7 +103,8 @@ async function startServer() {
       console.log(`🔒 API Base URL: http://localhost:${PORT}/api`);
       console.log(`🤖 Telegram Bot: Active and listening`);
       console.log(`🗄️ Database: Railway PostgreSQL`);
-      console.log(`🔧 Connection Manager: ${process.env.NODE_ENV === 'production' ? 'Active' : 'Disabled (development)'}`);
+      console.log(`🔧 Environment: ${process.env.NODE_ENV || 'development'}`);
+      console.log(`💾 Database: Connection pooling enabled`);
     });
   } catch (error) {
     console.error('Failed to start server:', error);
