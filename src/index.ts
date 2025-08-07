@@ -49,8 +49,21 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 // Health check
-app.get('/health', (req, res) => {
-  res.json({ status: 'OK', timestamp: new Date().toISOString() });
+app.get('/health', async (req, res) => {
+  try {
+    const dbStatus = await connectionManager.getConnectionStatus();
+    res.json({ 
+      status: 'OK', 
+      timestamp: new Date().toISOString(),
+      database: dbStatus
+    });
+  } catch (error) {
+    res.status(503).json({ 
+      status: 'ERROR', 
+      timestamp: new Date().toISOString(),
+      database: { isHealthy: false, error: 'Connection check failed' }
+    });
+  }
 });
 
 // API Routes
@@ -94,12 +107,18 @@ async function startServer() {
     // Initialize Telegram Bot
     telegramService.startBot();
     
+    // Start connection manager for production
+    if (process.env.NODE_ENV === 'production') {
+      connectionManager.startPeriodicCleanup();
+    }
+    
     app.listen(PORT, () => {
       console.log(`🚀 Server running on port ${PORT}`);
       console.log(`📊 Health check: http://localhost:${PORT}/health`);
       console.log(`🔒 API Base URL: http://localhost:${PORT}/api`);
       console.log(`🤖 Telegram Bot: Active and listening`);
       console.log(`🗄️ Database: Railway PostgreSQL`);
+      console.log(`🔧 Connection Manager: ${process.env.NODE_ENV === 'production' ? 'Active' : 'Disabled (development)'}`);
     });
   } catch (error) {
     console.error('Failed to start server:', error);

@@ -13,9 +13,9 @@ export const connectionCleanupMiddleware = (req: Request, res: Response, next: N
   const originalEnd = res.end;
   
   // Override res.end to cleanup connections
-  res.end = function(chunk?: any, encoding?: any) {
+  res.end = function(chunk?: any, encoding?: any, callback?: (() => void)) {
     // Call original end function
-    originalEnd.call(this, chunk, encoding);
+    const result = originalEnd.call(this, chunk, encoding, callback);
     
     // Cleanup database connections after response is sent (less aggressive)
     setImmediate(async () => {
@@ -35,6 +35,8 @@ export const connectionCleanupMiddleware = (req: Request, res: Response, next: N
         console.error('Error during connection cleanup:', error);
       }
     });
+    
+    return result;
   };
   
   next();
