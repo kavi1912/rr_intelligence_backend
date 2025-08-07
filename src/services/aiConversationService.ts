@@ -1,7 +1,7 @@
-import { PrismaClient, LeadStatus } from '@prisma/client';
+import { LeadStatus } from '@prisma/client';
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { prisma } from '../db/prisma';
 
-const prisma = new PrismaClient();
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
 export interface ConversationContext {

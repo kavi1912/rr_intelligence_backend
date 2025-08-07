@@ -1,8 +1,8 @@
 import TelegramBot from 'node-telegram-bot-api';
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '../db/prisma';
 
-const prisma = new PrismaClient();
+
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
 interface PropertySearchContext {

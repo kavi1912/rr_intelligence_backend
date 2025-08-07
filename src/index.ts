@@ -12,6 +12,8 @@ import { chatRoutes } from './routes/chat';
 import { mockAuthRoutes } from './routes/mockAuth';
 import { telegramRoutes } from './routes/telegramNew';
 import { errorHandler } from './middleware/errorHandler';
+import { connectionCleanupMiddleware } from './middleware/connectionCleanup';
+import { connectionManager } from './utils/connectionManager';
 import { telegramService } from './services/telegramService';
 // import { redisService } from './services/redisService';
 // Load environment variables
@@ -40,6 +42,11 @@ app.use(cors({
 app.use(limiter);
 app.use(express.json({ limit: '50mb' })); // Large limit for Base64 images
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+
+// Add connection cleanup middleware for production
+if (process.env.NODE_ENV === 'production') {
+  app.use(connectionCleanupMiddleware);
+}
 
 // Health check
 app.get('/health', (req, res) => {

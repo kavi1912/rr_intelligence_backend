@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import bcrypt from 'bcrypt';
-import { prisma } from '../utils/database';
+import { prisma } from '../db/prisma';
 import { generateToken } from '../utils/jwt';
 import { SignUpData, SignInData } from '../types';
 import { validateEmail, validatePhoneNumber, validatePassword, sanitizeInput } from '../utils/validation';

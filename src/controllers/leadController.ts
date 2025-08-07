@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { prisma } from '../utils/database';
+import { prisma } from '../db/prisma';
 import { AuthRequest, LeadData, LeadStatus } from '../types';
 import { asyncHandler } from '../middleware/errorHandler';
 import { sanitizeInput, validatePhoneNumber } from '../utils/validation';

@@ -1,9 +1,8 @@
 import express from 'express';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '../db/prisma';
 import { telegramService } from '../services/telegramService';
 
 const router = express.Router();
-const prisma = new PrismaClient();
 
 /**
  * POST /api/telegram/webhook

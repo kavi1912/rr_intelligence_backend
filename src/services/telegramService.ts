@@ -1,9 +1,7 @@
 import TelegramBot from 'node-telegram-bot-api';
-import { PrismaClient } from '@prisma/client';
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { prisma } from '../db/prisma';
 import { aiConversationService } from './aiConversationService';
-
-const prisma = new PrismaClient();
 
 interface TelegramBotService {
   bot: TelegramBot;

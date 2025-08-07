@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { prisma } from '../utils/database';
+import { prisma } from '../db/prisma';
 import { AuthRequest, PropertyData } from '../types';
 import { asyncHandler } from '../middleware/errorHandler';
 import { sanitizeInput, validatePropertyImages } from '../utils/validation';
