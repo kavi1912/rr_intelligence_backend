@@ -57,24 +57,42 @@ model Lead {
   @@map("leads")
 }
 
+enum PropertyStatus {
+  AVAILABLE
+  RESERVED
+  SOLD
+  UNDER_MAINTENANCE
+}
+
 model Property {
-  id             String   @id @default(uuid())
-  userId         String   @map("user_id")
-  images         Json     // Array of Base64 strings
+  id             String          @id @default(uuid())
+  userId         String          @map("user_id")
+  images         Json            // Array of image objects with Base64, isMain, order
+  videos         Json?           // Array of video objects with Base64, order
   description    String
-  pricePerSqft   Decimal  @map("price_per_sqft") @db.Decimal(10, 2)
+  pricePerSqft   Decimal         @map("price_per_sqft") @db.Decimal(10, 2)
+  totalPrice     Decimal?        @map("total_price") @db.Decimal(15, 2)
   location       String
-  contactInfo    String   @map("contact_info")
-  propertyType   String?  @map("property_type")
-  area           Decimal? @db.Decimal(10, 2)
+  contactInfo    String          @map("contact_info")
+  propertyType   String?         @map("property_type")
+  area           Decimal?        @db.Decimal(10, 2)
   bedrooms       Int?
   bathrooms      Int?
-  isActive       Boolean  @default(true) @map("is_active")
-  createdAt      DateTime @default(now()) @map("created_at")
-  updatedAt      DateTime @updatedAt @map("updated_at")
+  features       Json?           // Array of feature strings (pool, terrace, garden, etc.)
+  status         PropertyStatus  @default(AVAILABLE)
+  mainImageIndex Int?           @default(0) @map("main_image_index")
+  amenities      Json?           // Array of amenity strings
+  floorPlan      String?         @map("floor_plan") // Base64 string for floor plan image
+  virtualTour    String?         @map("virtual_tour") // URL for virtual tour
+  isActive       Boolean         @default(true) @map("is_active")
+  isFeatured     Boolean         @default(false) @map("is_featured")
+  viewCount      Int             @default(0) @map("view_count")
+  lastViewed     DateTime?       @map("last_viewed")
+  createdAt      DateTime        @default(now()) @map("created_at")
+  updatedAt      DateTime        @updatedAt @map("updated_at")
   
   // Relations
-  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
   
   @@map("properties")
 }

@@ -135,6 +135,15 @@ export const getPropertyById = asyncHandler(async (req: Request, res: Response):
     return;
   }
 
+  // Increment view count and update last viewed
+  await prisma.property.update({
+    where: { id },
+    data: { 
+      viewCount: (property.viewCount || 0) + 1,
+      lastViewed: new Date()
+    }
+  });
+
   res.json({ property });
 });
 
@@ -147,14 +156,23 @@ export const createProperty = asyncHandler(async (req: AuthRequest, res: Respons
 
   const {
     images,
+    videos,
     description,
     pricePerSqft,
+    totalPrice,
     location,
     contactInfo,
     propertyType,
     area,
     bedrooms,
-    bathrooms
+    bathrooms,
+    features,
+    status,
+    mainImageIndex,
+    amenities,
+    floorPlan,
+    virtualTour,
+    isFeatured
   }: PropertyData = req.body;
 
   // Validation
@@ -165,16 +183,32 @@ export const createProperty = asyncHandler(async (req: AuthRequest, res: Respons
     return;
   }
 
-  // Validate images
-  const imageValidation = validatePropertyImages(images);
-  if (!imageValidation.isValid) {
-    res.status(400).json({ error: imageValidation.message });
+  // Validate images (now expecting PropertyImage[] format)
+  if (!Array.isArray(images) || images.length === 0) {
+    res.status(400).json({ error: 'At least one image is required' });
+    return;
+  }
+
+  if (images.length > 20) {
+    res.status(400).json({ error: 'Maximum 20 images allowed' });
+    return;
+  }
+
+  // Validate videos if provided
+  if (videos && videos.length > 5) {
+    res.status(400).json({ error: 'Maximum 5 videos allowed' });
     return;
   }
 
   // Validate price
   if (pricePerSqft <= 0) {
     res.status(400).json({ error: 'Price per sqft must be greater than 0' });
+    return;
+  }
+
+  // Validate total price if provided
+  if (totalPrice !== undefined && totalPrice <= 0) {
+    res.status(400).json({ error: 'Total price must be greater than 0' });
     return;
   }
 
@@ -195,18 +229,33 @@ export const createProperty = asyncHandler(async (req: AuthRequest, res: Respons
     return;
   }
 
+  // Validate main image index
+  if (mainImageIndex !== undefined && (mainImageIndex < 0 || mainImageIndex >= images.length)) {
+    res.status(400).json({ error: 'Invalid main image index' });
+    return;
+  }
+
   const property = await prisma.property.create({
     data: {
       userId,
-      images,
+      images: images as any,
+      ...(videos && { videos: videos as any }),
       description: sanitizeInput(description),
       pricePerSqft,
+      ...(totalPrice !== undefined && { totalPrice }),
       location: sanitizeInput(location),
       contactInfo: sanitizeInput(contactInfo),
       ...(propertyType && { propertyType: sanitizeInput(propertyType) }),
       ...(area !== undefined && { area }),
       ...(bedrooms !== undefined && { bedrooms }),
-      ...(bathrooms !== undefined && { bathrooms })
+      ...(bathrooms !== undefined && { bathrooms }),
+      ...(features && { features: features as any }),
+      ...(status && { status }),
+      ...(mainImageIndex !== undefined && { mainImageIndex }),
+      ...(amenities && { amenities: amenities as any }),
+      ...(floorPlan && { floorPlan }),
+      ...(virtualTour && { virtualTour }),
+      ...(isFeatured !== undefined && { isFeatured })
     },
     include: {
       user: {
@@ -236,14 +285,23 @@ export const updateProperty = asyncHandler(async (req: AuthRequest, res: Respons
 
   const {
     images,
+    videos,
     description,
     pricePerSqft,
+    totalPrice,
     location,
     contactInfo,
     propertyType,
     area,
     bedrooms,
-    bathrooms
+    bathrooms,
+    features,
+    status,
+    mainImageIndex,
+    amenities,
+    floorPlan,
+    virtualTour,
+    isFeatured
   } = req.body;
 
   // Check if property exists and belongs to user
@@ -262,16 +320,32 @@ export const updateProperty = asyncHandler(async (req: AuthRequest, res: Respons
 
   // Validate images if provided
   if (images) {
-    const imageValidation = validatePropertyImages(images);
-    if (!imageValidation.isValid) {
-      res.status(400).json({ error: imageValidation.message });
+    if (!Array.isArray(images) || images.length === 0) {
+      res.status(400).json({ error: 'At least one image is required' });
       return;
     }
+
+    if (images.length > 20) {
+      res.status(400).json({ error: 'Maximum 20 images allowed' });
+      return;
+    }
+  }
+
+  // Validate videos if provided
+  if (videos && videos.length > 5) {
+    res.status(400).json({ error: 'Maximum 5 videos allowed' });
+    return;
   }
 
   // Validate price if provided
   if (pricePerSqft !== undefined && pricePerSqft <= 0) {
     res.status(400).json({ error: 'Price per sqft must be greater than 0' });
+    return;
+  }
+
+  // Validate total price if provided
+  if (totalPrice !== undefined && totalPrice <= 0) {
+    res.status(400).json({ error: 'Total price must be greater than 0' });
     return;
   }
 
@@ -292,18 +366,33 @@ export const updateProperty = asyncHandler(async (req: AuthRequest, res: Respons
     return;
   }
 
+  // Validate main image index if provided
+  if (mainImageIndex !== undefined && images && (mainImageIndex < 0 || mainImageIndex >= images.length)) {
+    res.status(400).json({ error: 'Invalid main image index' });
+    return;
+  }
+
   const updatedProperty = await prisma.property.update({
     where: { id },
     data: {
-      ...(images && { images }),
+      ...(images && { images: images as any }),
+      ...(videos !== undefined && { videos: videos as any }),
       ...(description && { description: sanitizeInput(description) }),
       ...(pricePerSqft !== undefined && { pricePerSqft }),
+      ...(totalPrice !== undefined && { totalPrice }),
       ...(location && { location: sanitizeInput(location) }),
       ...(contactInfo && { contactInfo: sanitizeInput(contactInfo) }),
       ...(propertyType && { propertyType: sanitizeInput(propertyType) }),
       ...(area !== undefined && { area }),
       ...(bedrooms !== undefined && { bedrooms }),
-      ...(bathrooms !== undefined && { bathrooms })
+      ...(bathrooms !== undefined && { bathrooms }),
+      ...(features !== undefined && { features: features as any }),
+      ...(status && { status }),
+      ...(mainImageIndex !== undefined && { mainImageIndex }),
+      ...(amenities !== undefined && { amenities: amenities as any }),
+      ...(floorPlan !== undefined && { floorPlan }),
+      ...(virtualTour !== undefined && { virtualTour }),
+      ...(isFeatured !== undefined && { isFeatured })
     },
     include: {
       user: {

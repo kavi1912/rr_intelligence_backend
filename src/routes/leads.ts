@@ -6,7 +6,8 @@ import {
   updateLeadStatus,
   updateLead,
   deleteLead,
-  getLeadsByTelegramUserId
+  getLeadsByTelegramUserId,
+  addSampleChatHistory
 } from '../controllers/leadController';
 import { authenticateToken, optionalAuth } from '../middleware/auth';
 
@@ -22,5 +23,6 @@ router.get('/:id', authenticateToken, getLeadById);
 router.patch('/:id/status', authenticateToken, updateLeadStatus);
 router.put('/:id', authenticateToken, updateLead);
 router.delete('/:id', authenticateToken, deleteLead);
+router.post('/:id/sample-chat', authenticateToken, addSampleChatHistory);
 
 export { router as leadRoutes };

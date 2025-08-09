@@ -103,11 +103,14 @@ async function startServer() {
       
       // Initialize Telegram Bot after server is listening
       try {
-        if (process.env.TELEGRAM_BOT_TOKEN) {
+        // Temporarily disable Telegram bot for property management testing
+        const enableTelegramBot = true; // Set to true to enable bot
+        
+        if (enableTelegramBot && process.env.TELEGRAM_BOT_TOKEN) {
           telegramService.startBot();
           console.log(`🤖 Telegram Bot: Active and listening`);
         } else {
-          console.log(`🤖 Telegram Bot: Disabled (no token provided)`);
+          console.log(`🤖 Telegram Bot: Disabled (temporarily disabled for testing)`);
         }
       } catch (botError) {
         console.warn('Telegram bot failed to start:', botError);

@@ -327,3 +327,96 @@ export const getLeadsByTelegramUserId = asyncHandler(async (req: Request, res: R
 
   res.json({ lead });
 });
+
+// New endpoint to add sample chat history for testing
+export const addSampleChatHistory = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+  const { id } = req.params;
+
+  const lead = await prisma.lead.findUnique({
+    where: { id }
+  });
+
+  if (!lead) {
+    res.status(404).json({ error: 'Lead not found' });
+    return;
+  }
+
+  // Check if chat history already exists
+  const existingChat = await prisma.chatHistory.findFirst({
+    where: { leadId: id }
+  });
+
+  if (existingChat) {
+    res.status(400).json({ error: 'Chat history already exists for this lead' });
+    return;
+  }
+
+  // Create sample chat history
+  const sampleChats = [
+    {
+      leadId: id,
+      telegramUserId: lead.telegramUserId,
+      message: "Hi! I'm looking for a property to buy.",
+      response: "Hello! I'd be happy to help you find the perfect property. What type of property are you looking for?",
+      messageType: "text",
+      language: lead.language || "en",
+      timestamp: new Date(Date.now() - 4 * 60 * 60 * 1000) // 4 hours ago
+    },
+    {
+      leadId: id,
+      telegramUserId: lead.telegramUserId,
+      message: "I'm interested in apartments, preferably with 2-3 bedrooms and a good view.",
+      response: "Great! I have several apartments that match your criteria. Let me show you some options with beautiful views and spacious layouts.",
+      messageType: "text",
+      language: lead.language || "en",
+      timestamp: new Date(Date.now() - 3.5 * 60 * 60 * 1000) // 3.5 hours ago
+    },
+    {
+      leadId: id,
+      telegramUserId: lead.telegramUserId,
+      message: "What's my budget range?",
+      response: "Could you please let me know your budget range? This will help me recommend the most suitable properties for you.",
+      messageType: "text", 
+      language: lead.language || "en",
+      timestamp: new Date(Date.now() - 3 * 60 * 60 * 1000) // 3 hours ago
+    },
+    {
+      leadId: id,
+      telegramUserId: lead.telegramUserId,
+      message: `My budget is around $${lead.budget || 500000}.`,
+      response: "Perfect! With that budget, you have some excellent options. I'll send you details of properties that fit your criteria and budget.",
+      messageType: "text",
+      language: lead.language || "en", 
+      timestamp: new Date(Date.now() - 2.5 * 60 * 60 * 1000) // 2.5 hours ago
+    },
+    {
+      leadId: id,
+      telegramUserId: lead.telegramUserId,
+      message: "Can you schedule a viewing for me?",
+      response: "Absolutely! I'll arrange property viewings for you. When would be a good time for you this week?",
+      messageType: "text",
+      language: lead.language || "en",
+      timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000) // 2 hours ago
+    }
+  ];
+
+  // Create all chat records
+  await prisma.chatHistory.createMany({
+    data: sampleChats
+  });
+
+  // Create a sample follow-up
+  await prisma.followUp.create({
+    data: {
+      leadId: id,
+      activity: "Schedule property viewing appointments",
+      status: "PENDING",
+      notes: "Client interested in 2-3 bedroom apartments with good views. Budget confirmed."
+    }
+  });
+
+  res.json({
+    message: 'Sample chat history and follow-up created successfully',
+    chatCount: sampleChats.length
+  });
+});
