@@ -23,17 +23,20 @@ enum FollowUpStatus {
 }
 
 model User {
-  id           String     @id @default(uuid())
-  username     String     @unique
-  companyName  String     @map("company_name")
-  phoneNumber  String     @unique @map("phone_number")
-  email        String     @unique
-  password     String
-  createdAt    DateTime   @default(now()) @map("created_at")
-  updatedAt    DateTime   @updatedAt @map("updated_at")
+  id                  String     @id @default(uuid())
+  username            String     @unique
+  companyName         String     @map("company_name")
+  phoneNumber         String     @unique @map("phone_number")
+  email               String     @unique
+  password            String
+  telegramBotToken    String?    @map("telegram_bot_token")
+  telegramBotInstructions String? @map("telegram_bot_instructions")
+  telegramBotActive   Boolean    @default(false) @map("telegram_bot_active")
+  createdAt           DateTime   @default(now()) @map("created_at")
+  updatedAt           DateTime   @updatedAt @map("updated_at")
   
   // Relations
-  properties   Property[]
+  properties          Property[]
   
   @@map("users")
 }

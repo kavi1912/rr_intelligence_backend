@@ -11,9 +11,11 @@ import { statsRoutes } from './routes/stats';
 import { chatRoutes } from './routes/chat';
 import { mockAuthRoutes } from './routes/mockAuth';
 import { telegramRoutes } from './routes/telegramNew';
+import telegramConfigRoutes from './routes/telegram';
 import { errorHandler } from './middleware/errorHandler';
 // Removed complex connection management that was causing startup issues
 import { telegramService } from './services/telegramService';
+import { multiUserTelegramService } from './services/multiUserTelegramService';
 // import { redisService } from './services/redisService';
 // Load environment variables
 dotenv.config();
@@ -81,6 +83,7 @@ app.use('/api/properties', propertyRoutes);
 app.use('/api/stats', statsRoutes);
 app.use('/api/chat', chatRoutes);
 app.use('/api/telegram', telegramRoutes);
+app.use('/api/telegram-config', telegramConfigRoutes);
 
 // Error handling middleware
 app.use(errorHandler);
@@ -93,7 +96,7 @@ app.use('*', (req, res) => {
 async function startServer() {
   try {
     // Start HTTP server first
-    app.listen(PORT, '0.0.0.0', () => {
+    app.listen(PORT, '0.0.0.0', async () => {
       console.log(`🚀 Server running on port ${PORT}`);
       console.log(`📊 Health check: http://localhost:${PORT}/health`);
       console.log(`🔒 API Base URL: http://localhost:${PORT}/api`);
@@ -101,20 +104,22 @@ async function startServer() {
       console.log(`🗄️ Database: Railway PostgreSQL`);
       console.log(`💾 Database: Connection pooling enabled`);
       
-      // Initialize Telegram Bot after server is listening
+      // Initialize Telegram Bot system after server is listening
       try {
-        // Temporarily disable Telegram bot for property management testing
-        const enableTelegramBot = true; // Set to true to enable bot
+        // Initialize multi-user Telegram service
+        console.log(`🤖 Starting Multi-User Telegram Bot System...`);
+        await multiUserTelegramService.initializeAllUserBots();
+        console.log(`🤖 Multi-User Telegram Bot System: Active with ${multiUserTelegramService.getActiveBotCount()} active bots`);
         
-        if (enableTelegramBot && process.env.TELEGRAM_BOT_TOKEN) {
+        // Keep the original bot as fallback (optional)
+        const enableFallbackBot = false; // Set to true if you want the original bot too
+        if (enableFallbackBot && process.env.TELEGRAM_BOT_TOKEN) {
           telegramService.startBot();
-          console.log(`🤖 Telegram Bot: Active and listening`);
-        } else {
-          console.log(`🤖 Telegram Bot: Disabled (temporarily disabled for testing)`);
+          console.log(`🤖 Fallback Telegram Bot: Active and listening`);
         }
       } catch (botError) {
-        console.warn('Telegram bot failed to start:', botError);
-        console.log(`🤖 Telegram Bot: Disabled due to error`);
+        console.warn('Telegram bot system failed to start:', botError);
+        console.log(`🤖 Telegram Bot System: Disabled due to error`);
       }
     });
   } catch (error) {
@@ -126,6 +131,7 @@ async function startServer() {
 // Graceful shutdown
 process.on('SIGTERM', async () => {
   console.log('SIGTERM received, shutting down gracefully');
+  await multiUserTelegramService.stopAllBots();
   telegramService.stopBot();
   // await redisService.disconnect();
   process.exit(0);
@@ -133,6 +139,7 @@ process.on('SIGTERM', async () => {
 
 process.on('SIGINT', async () => {
   console.log('SIGINT received, shutting down gracefully');
+  await multiUserTelegramService.stopAllBots();
   telegramService.stopBot();
   // await redisService.disconnect();
   process.exit(0);
