@@ -182,7 +182,7 @@ Need help? Just ask me anything!`;
     });
 
     // Handle polling errors
-    bot.on('polling_error', (error) => {
+    bot.on('polling_error', (error: any) => {
       console.error(`Telegram polling error for user ${userId}:`, error);
       // If token becomes invalid, stop the bot
       if (error.code === 'ETELEGRAM' && error.response?.statusCode === 401) {
@@ -251,7 +251,7 @@ Need help? Just ask me anything!`;
   private async sendPropertyImages(bot: TelegramBot, chatId: number, telegramUserId: string, propertyNumber: number, botOwnerId: string): Promise<void> {
     try {
       // Get properties owned by the bot owner
-      const properties = await prisma.property.findMany({
+      const properties = await (prisma as any).property.findMany({
         where: { 
           isActive: true,
           userId: botOwnerId  // Only show properties owned by the bot owner
@@ -282,7 +282,7 @@ Need help? Just ask me anything!`;
   // Show property images
   private async showPropertyImages(bot: TelegramBot, chatId: number, telegramUserId: string, propertyId: string, botOwnerId: string): Promise<void> {
     try {
-      const property = await prisma.property.findFirst({
+      const property = await (prisma as any).property.findFirst({
         where: { 
           id: propertyId,
           userId: botOwnerId  // Ensure property belongs to bot owner
@@ -347,7 +347,7 @@ Reply with your contact number for quick follow-up!`;
   // Initialize bots for all active users
   public async initializeAllUserBots(): Promise<void> {
     try {
-      const users = await prisma.user.findMany({
+      const users = await (prisma as any).user.findMany({
         where: {
           telegramBotActive: true,
           telegramBotToken: { not: null }
@@ -474,7 +474,7 @@ Type your preferred location:`;
   private async searchPropertiesByLocation(bot: TelegramBot, chatId: number, telegramUserId: string, location: string, originalMessage: string, botOwnerId: string): Promise<void> {
     try {
       // Search for properties matching the location (owned by the bot owner)
-      const properties = await prisma.property.findMany({
+      const properties = await (prisma as any).property.findMany({
         where: {
           location: {
             contains: location,

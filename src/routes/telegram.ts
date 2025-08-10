@@ -15,11 +15,11 @@ interface AuthenticatedRequest extends Request {
 const router = Router();
 
 // Get user's Telegram bot configuration
-router.get('/config', authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
+router.get('/config', authenticateToken, async (req: AuthenticatedRequest, res: Response): Promise<Response> => {
   try {
     const userId = req.user?.id;
     
-    const user = await prisma.user.findUnique({
+    const user = await (prisma as any).user.findUnique({
       where: { id: userId },
       select: {
         telegramBotToken: true,
@@ -37,7 +37,7 @@ router.get('/config', authenticateToken, async (req: AuthenticatedRequest, res: 
       ? `${user.telegramBotToken.substring(0, 10)}...` 
       : null;
 
-    res.json({
+    return res.json({
       hasToken: !!user.telegramBotToken,
       maskedToken,
       instructions: user.telegramBotInstructions,
@@ -45,12 +45,12 @@ router.get('/config', authenticateToken, async (req: AuthenticatedRequest, res: 
     });
   } catch (error) {
     console.error('Error fetching Telegram config:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    return res.status(500).json({ error: 'Internal server error' });
   }
 });
 
 // Update user's Telegram bot configuration
-router.put('/config', authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
+router.put('/config', authenticateToken, async (req: AuthenticatedRequest, res: Response): Promise<Response> => {
   try {
     const userId = req.user?.id;
     const { token, instructions, isActive } = req.body;
@@ -64,7 +64,7 @@ router.put('/config', authenticateToken, async (req: AuthenticatedRequest, res: 
 
     // Check if token is already used by another user
     if (token) {
-      const existingUser = await prisma.user.findFirst({
+      const existingUser = await (prisma as any).user.findFirst({
         where: {
           telegramBotToken: token,
           id: { not: userId } // Exclude current user
@@ -80,7 +80,7 @@ router.put('/config', authenticateToken, async (req: AuthenticatedRequest, res: 
     }
 
     // Get current config to check if bot needs restarting
-    const currentUser = await prisma.user.findUnique({
+    const currentUser = await (prisma as any).user.findUnique({
       where: { id: userId },
       select: { telegramBotToken: true, telegramBotActive: true }
     });
@@ -90,7 +90,7 @@ router.put('/config', authenticateToken, async (req: AuthenticatedRequest, res: 
     if (instructions !== undefined) updateData.telegramBotInstructions = instructions;
     if (isActive !== undefined) updateData.telegramBotActive = isActive;
 
-    const updatedUser = await prisma.user.update({
+    const updatedUser = await (prisma as any).user.update({
       where: { id: userId },
       data: updateData,
       select: {
@@ -122,7 +122,7 @@ router.put('/config', authenticateToken, async (req: AuthenticatedRequest, res: 
       ? `${updatedUser.telegramBotToken.substring(0, 10)}...` 
       : null;
 
-    res.json({
+    return res.json({
       hasToken: !!updatedUser.telegramBotToken,
       maskedToken,
       instructions: updatedUser.telegramBotInstructions,
@@ -131,12 +131,12 @@ router.put('/config', authenticateToken, async (req: AuthenticatedRequest, res: 
     });
   } catch (error) {
     console.error('Error updating Telegram config:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    return res.status(500).json({ error: 'Internal server error' });
   }
 });
 
 // Test Telegram bot connection
-router.post('/test', authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
+router.post('/test', authenticateToken, async (req: AuthenticatedRequest, res: Response): Promise<Response> => {
   try {
     const userId = req.user?.id;
     const { token } = req.body; // Allow token to be sent in request body
@@ -145,7 +145,7 @@ router.post('/test', authenticateToken, async (req: AuthenticatedRequest, res: R
     
     // If no token provided in request, use saved token
     if (!botToken) {
-      const user = await prisma.user.findUnique({
+      const user = await (prisma as any).user.findUnique({
         where: { id: userId },
         select: { telegramBotToken: true }
       });
@@ -168,27 +168,40 @@ router.post('/test', authenticateToken, async (req: AuthenticatedRequest, res: R
     const response = await fetch(`https://api.telegram.org/bot${botToken}/getMe`);
     const data = await response.json();
 
-    if (data.ok) {
-      res.json({
+    interface TelegramResponse {
+      ok: boolean;
+      result?: {
+        username: string;
+        first_name: string;
+        can_join_groups: boolean;
+        can_read_all_group_messages: boolean;
+      };
+      description?: string;
+    }
+
+    const telegramData = data as TelegramResponse;
+
+    if (telegramData.ok && telegramData.result) {
+      return res.json({
         success: true,
         botInfo: {
-          username: data.result.username,
-          firstName: data.result.first_name,
-          canJoinGroups: data.result.can_join_groups,
-          canReadAllGroupMessages: data.result.can_read_all_group_messages
+          username: telegramData.result.username,
+          firstName: telegramData.result.first_name,
+          canJoinGroups: telegramData.result.can_join_groups,
+          canReadAllGroupMessages: telegramData.result.can_read_all_group_messages
         },
         message: 'Bot connection successful!'
       });
     } else {
-      res.status(400).json({
+      return res.status(400).json({
         success: false,
         error: 'Invalid bot token or bot configuration error',
-        details: data.description
+        details: telegramData.description
       });
     }
   } catch (error) {
     console.error('Error testing Telegram bot:', error);
-    res.status(500).json({ 
+    return res.status(500).json({ 
       success: false,
       error: 'Failed to test bot connection. Please check your token.' 
     });
@@ -196,11 +209,11 @@ router.post('/test', authenticateToken, async (req: AuthenticatedRequest, res: R
 });
 
 // Get bot status
-router.get('/status', authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
+router.get('/status', authenticateToken, async (req: AuthenticatedRequest, res: Response): Promise<Response> => {
   try {
     const userId = req.user?.id;
     
-    const user = await prisma.user.findUnique({
+    const user = await (prisma as any).user.findUnique({
       where: { id: userId },
       select: {
         telegramBotActive: true,
@@ -224,7 +237,7 @@ router.get('/status', authenticateToken, async (req: AuthenticatedRequest, res: 
     console.log(`   - Total active bots: ${activeBots}`);
     console.log(`   - Active bots info:`, activeBotsInfo);
 
-    res.json({
+    return res.json({
       isConfigured: !!user.telegramBotToken,
       isActive: user.telegramBotActive,
       isRunning,
@@ -239,7 +252,7 @@ router.get('/status', authenticateToken, async (req: AuthenticatedRequest, res: 
     });
   } catch (error) {
     console.error('Error getting bot status:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    return res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -252,7 +265,7 @@ router.delete('/config', authenticateToken, async (req: AuthenticatedRequest, re
     await multiUserTelegramService.stopUserBot(userId);
     
     // Remove token from database
-    await prisma.user.update({
+    await (prisma as any).user.update({
       where: { id: userId },
       data: {
         telegramBotToken: null,
